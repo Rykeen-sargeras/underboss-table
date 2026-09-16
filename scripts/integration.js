@@ -7,6 +7,11 @@ async function register(username) {
   if (!response.ok) throw new Error(await response.text());
   return response.json();
 }
+async function guest() {
+  const response = await fetch(`${base}/api/auth/guest`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json();
+}
 const connect = (token) => new Promise((resolve, reject) => {
   const socket = io(base, { auth: { token }, transports: ["websocket"] });
   socket.once("connect", () => resolve(socket));
@@ -24,5 +29,16 @@ const emit = (socket, event, payload) => new Promise((resolve, reject) => socket
   const update = await nextUpdate;
   if (!update.game || update.game.players.length !== 2) throw new Error("Game state was not broadcast.");
   one.disconnect(); two.disconnect();
-  console.log("Integration flow passed: register → create → join → start");
+  const [c, d] = await Promise.all([guest(), guest()]);
+  const [three, four] = await Promise.all([connect(c.token), connect(d.token)]);
+  const turf = await emit(three, "table:create", { name: "QA Turf", maxSeats: 4, gameType: "turf" });
+  await emit(four, "table:join", turf.id);
+  const turfUpdate = new Promise((resolve) => three.once("table:update", ({ game }) => game?.kind === "turf" && resolve(game)));
+  await emit(three, "game:start", {});
+  const turfGame = await turfUpdate;
+  if (turfGame.board.length !== 16 || turfGame.players.length !== 2) throw new Error("Turf state was not broadcast.");
+  const active = turfGame.turnPlayerId === c.user.id ? three : four;
+  await emit(active, "turf:roll", {});
+  three.disconnect(); four.disconnect();
+  console.log("Integration flows passed: card deal and Turf Wars create → join → start → roll");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

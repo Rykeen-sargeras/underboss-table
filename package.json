@@ -9,7 +9,7 @@
     "start": "node server/index.js",
     "desktop": "electron .",
     "dist:win": "electron-builder --win nsis",
-    "test": "node --test test/game.test.js",
+    "test": "node --test test/*.test.js",
     "test:integration": "node scripts/integration.js"
   },
   "dependencies": {

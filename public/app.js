@@ -1,6 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
-const state = { token: localStorage.getItem("underboss_token"), user: null, socket: null, table: null, game: null, tables: [], authMode: "login", selectedGame: null, pendingCard: null, pendingTarget: null };
+const state = { token: localStorage.getItem("underboss_token"), user: null, socket: null, table: null, game: null, tables: [], authMode: "login", selectedGame: null, createGameType: "cards", pendingCard: null, pendingTarget: null };
 
 const views = { guest: $("#guestView"), lobby: $("#lobbyView"), table: $("#tableView"), turf: $("#turfView") };
 function showView(name) { Object.entries(views).forEach(([key, el]) => el.classList.toggle("hidden", key !== name)); }
@@ -50,8 +50,12 @@ function connectSocket() {
   state.socket?.disconnect();
   state.socket = io({ auth: { token: state.token } });
   state.socket.on("connect_error", (error) => { if (error.message === "AUTH_REQUIRED") signOut(); else toast("Could not reach the backroom.", "error"); });
-  state.socket.on("lobby:update", (tables) => { state.tables = tables; renderLobby(); });
-  state.socket.on("table:update", ({ table, game }) => { state.table = table; state.game = game; showView("table"); renderTable(); });
+  state.socket.on("lobby:update", (tables) => { state.tables = tables; renderLobby(); renderTurfLobby(); });
+  state.socket.on("table:update", ({ table, game }) => {
+    state.table = table; state.game = game;
+    if (table.type === "turf") { state.selectedGame = "turf"; showView("turf"); renderTurf(); }
+    else { state.selectedGame = "cards"; showView("table"); renderTable(); }
+  });
   state.socket.on("toast", ({ message, type }) => toast(message, type));
 }
 function emit(event, payload) {
@@ -62,7 +66,7 @@ function emit(event, payload) {
 
 function renderLobby() {
   const list = $("#tableList");
-  const waiting = state.tables.filter((t) => t.status !== "playing" && t.seats < t.maxSeats);
+  const waiting = state.tables.filter((t) => (t.type || "cards") === "cards" && t.status !== "playing" && t.seats < t.maxSeats);
   if (!waiting.length) {
     list.innerHTML = `<div class="empty-tables"><b>No open tables</b>Be the first to call a meeting.</div>`;
     return;
@@ -73,6 +77,14 @@ function renderLobby() {
     <div><p class="seat-count">${table.seats}/${table.maxSeats} seated</p><button class="button" data-join="${table.id}">Join</button></div>
   </article>`).join("");
   $$('[data-join]').forEach((button) => button.onclick = () => emit("table:join", button.dataset.join));
+}
+function renderTurfLobby() {
+  const list = $("#turfTableList");
+  if (!list) return;
+  const waiting = state.tables.filter((t) => t.type === "turf" && t.status !== "playing" && t.seats < t.maxSeats);
+  if (!waiting.length) { list.innerHTML = `<div class="empty-tables"><b>No open turf wars</b>Call the first sit-down.</div>`; return; }
+  list.innerHTML = waiting.map((table) => `<article class="table-row"><div class="table-title"><span class="mini-seal">♛</span><div><h3>${escapeHtml(table.name)}</h3><p>Table ${table.id}</p></div></div><div class="crew-stack">${table.players.map((p) => `<span class="avatar" style="${avatarStyle(p)}">${p.avatar ? "" : initials(p.username)}</span>`).join("")}</div><div><p class="seat-count">${table.seats}/${table.maxSeats} families</p><button class="button" data-join-turf="${table.id}">Join</button></div></article>`).join("");
+  $$('[data-join-turf]').forEach((button) => button.onclick = () => emit("table:join", button.dataset.joinTurf));
 }
 function avatarStyle(user) { return user.avatar ? `background-image:url('${user.avatar.replaceAll("'", "%27")}')` : ""; }
 function escapeHtml(value) { const div = document.createElement("div"); div.textContent = value; return div.innerHTML; }
@@ -128,6 +140,37 @@ function renderTable() {
   $$("#hand .game-card:not(.unplayable)").forEach((button) => button.onclick = () => playSelected(button.dataset.cardId));
 }
 
+const turfGrid = [[5,5],[5,4],[5,3],[5,2],[5,1],[4,1],[3,1],[2,1],[1,1],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5]];
+function renderTurf() {
+  const inTable = state.table?.type === "turf";
+  $("#turfLobby").classList.toggle("hidden", inTable);
+  $("#turfTableArea").classList.toggle("hidden", !inTable);
+  $("#createTurfButton").classList.toggle("hidden", inTable);
+  if (!inTable) { $("#turfHeader").textContent = "Turf Wars"; $("#turfCode").textContent = "OWN THE CITY"; return; }
+  $("#turfHeader").textContent = state.table.name; $("#turfCode").textContent = `TURF TABLE ${state.table.id}`;
+  const players = state.game?.players || state.table.players.map((p, token) => ({ ...p, token, cash: 1500, position: 0 }));
+  $("#turfPlayerList").innerHTML = players.map((p) => `<div class="turf-player ${state.game?.turnPlayerId === p.id ? "active" : ""} ${p.bankrupt ? "bankrupt" : ""}"><span class="turf-token token-${p.token}">${p.token + 1}</span><div><b>${escapeHtml(p.username)}</b><small>${p.bankrupt ? "OUT OF BUSINESS" : `$${p.cash.toLocaleString()}`}</small></div></div>`).join("");
+  const board = state.game?.board || [];
+  if (!board.length) {
+    $("#turfBoard").innerHTML = `<div class="turf-board-center"><span>♛</span><b>TURF WARS</b><small>WAITING FOR THE FAMILIES</small></div>`;
+  } else {
+    $("#turfBoard").innerHTML = board.map((space, index) => {
+      const [row, col] = turfGrid[index]; const ownerId = state.game.owners[index]; const owner = players.find((p) => p.id === ownerId);
+      const tokens = players.filter((p) => !p.bankrupt && p.position === index).map((p) => `<i class="turf-token token-${p.token}">${p.token + 1}</i>`).join("");
+      const detail = space.type === "property" ? `$${space.price} · rent $${space.rent}` : space.type === "fee" ? `PAY $${space.amount}` : space.type === "start" ? "COLLECT $200" : space.type === "event" ? "TAKE A CHANCE" : "JUST VISITING";
+      return `<div class="turf-space ${space.type} ${space.color || ""} ${state.game.pendingProperty === index ? "pending" : ""}" style="grid-row:${row};grid-column:${col}"><strong>${escapeHtml(space.name)}</strong><small>${detail}</small>${owner ? `<em>Owned by ${escapeHtml(owner.username)}</em>` : ""}<span class="space-tokens">${tokens}</span></div>`;
+    }).join("") + `<div class="turf-board-center"><span>♛</span><b>TURF WARS</b><small>OWN THE CITY</small></div>`;
+  }
+  const isHost = state.table.hostId === state.user.id; const started = !!state.game; const myTurn = state.game?.turnPlayerId === state.user.id; const pending = state.game?.phase === "buy-or-pass";
+  $("#turfStartButton").classList.toggle("hidden", !isHost || started);
+  $("#turfRollButton").classList.toggle("hidden", !started || !myTurn || state.game.phase !== "roll" || !!state.game.winner);
+  $("#turfBuyButton").classList.toggle("hidden", !started || !myTurn || !pending || !!state.game.winner);
+  $("#turfPassButton").classList.toggle("hidden", !started || !myTurn || !pending || !!state.game.winner);
+  $("#turfDice").textContent = state.game?.dice ? `${state.game.dice[0]}  ·  ${state.game.dice[1]}` : "—  ·  —";
+  $("#turfMessage").textContent = state.game?.message || (isHost ? "Start when at least two families are seated." : "Waiting for the host to start.");
+  if (pending) { const space = state.game.board[state.game.pendingProperty]; $("#turfBuyButton").textContent = `Buy ${space.name} · $${space.price}`; }
+}
+
 async function playSelected(cardId) {
   const card = state.game.players.find((p) => p.id === state.user.id)?.hand.find((c) => c.id === cardId);
   if (!card) return;
@@ -160,8 +203,9 @@ $("#rulesButton").onclick = () => openDialog("rulesDialog");
 $("#logoutButton").onclick = signOut;
 $("#homeButton").onclick = () => showView("guest");
 $$('[data-select-game]').forEach((button) => button.onclick = () => chooseGame(button.dataset.selectGame));
-$("#leaveTurfButton").onclick = () => showView("guest");
-$("#createTableButton").onclick = () => openDialog("createDialog");
+$("#leaveTurfButton").onclick = async () => { if (state.table?.type === "turf" && !(await emit("table:leave", {}))) return; state.table = null; state.game = null; showView("guest"); };
+$("#createTableButton").onclick = () => { state.createGameType = "cards"; $("#newTableName").placeholder = "The Gilded Room"; openDialog("createDialog"); };
+$("#createTurfButton").onclick = () => { state.createGameType = "turf"; $("#newTableName").placeholder = "The Five Families"; openDialog("createDialog"); };
 $("#authForm").onsubmit = async (event) => {
   event.preventDefault(); $("#authError").textContent = "";
   try {
@@ -183,12 +227,17 @@ $("#avatarForm").onsubmit = async (event) => {
 };
 $("#createForm").onsubmit = async (event) => {
   event.preventDefault();
-  const ok = await emit("table:create", { name: $("#newTableName").value, maxSeats: Number($("#newTableSeats").value) });
+  const ok = await emit("table:create", { name: $("#newTableName").value, maxSeats: Number($("#newTableSeats").value), gameType: state.createGameType });
   if (ok) closeDialogs();
 };
 $("#leaveTableButton").onclick = async () => { if (await emit("table:leave", {})) { state.table = null; state.game = null; showView("lobby"); } };
 $("#startGameButton").onclick = () => emit("game:start", {});
 $("#drawPile").onclick = () => emit("game:draw", {});
+$("#leaveTurfTableButton").onclick = async () => { if (await emit("table:leave", {})) { state.table = null; state.game = null; renderTurf(); } };
+$("#turfStartButton").onclick = () => emit("game:start", {});
+$("#turfRollButton").onclick = () => emit("turf:roll", {});
+$("#turfBuyButton").onclick = () => emit("turf:buy", {});
+$("#turfPassButton").onclick = () => emit("turf:pass", {});
 $$('[data-suit]').forEach((button) => button.onclick = async () => { const cardId = state.pendingCard; const targetId = state.pendingTarget; state.pendingCard = null; state.pendingTarget = null; dialog("suitDialog").close(); await emit("game:play", { cardId, targetId, chosenSuit: button.dataset.suit }); });
 $$('dialog').forEach((modal) => modal.addEventListener("click", (event) => { if (event.target === modal && modal.id !== "suitDialog") modal.close(); }));
 

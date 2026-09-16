@@ -12,7 +12,7 @@ An original, mafia-themed real-time shedding card game for 2–6 players. It run
 - Five family colors and seven action cards, including the single Trade Hands and single Fuck You +10 cards
 - Persistent account stats in a compact server-side data store
 - Responsive browser UI and a Windows Electron installer target
-- A game-selection menu and an initial Turf Wars property-game concept
+- A game-selection menu plus playable Turf Wars alpha with dice movement, property ownership, tribute, fees, bankruptcy, and live turns
 - Railway configuration and health check
 
 ## Run locally

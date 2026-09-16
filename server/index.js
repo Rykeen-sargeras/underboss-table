@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const { Server } = require("socket.io");
 const db = require("./db");
 const { startGame, playCard, drawAndPass, publicState } = require("./game");
+const { startTurfGame, rollDice, buyProperty, passProperty, turfPublicState } = require("./turf");
 
 const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET || "local-dev-only-change-this-secret";
@@ -83,6 +84,7 @@ const tableSummary = (table) => ({
   id: table.id,
   name: table.name,
   hostId: table.hostId,
+  type: table.type || "cards",
   status: table.status,
   seats: table.players.length,
   maxSeats: table.maxSeats,
@@ -92,9 +94,15 @@ const broadcastLobby = () => io.emit("lobby:update", [...tables.values()].map(ta
 const emitTable = (table) => {
   for (const socket of io.sockets.sockets.values()) {
     if (socket.data.tableId !== table.id || !socket.data.user) continue;
-    socket.emit("table:update", { table: tableSummary(table), game: publicState(table, socket.data.user.id) });
+    const game = table.type === "turf" ? turfPublicState(table) : publicState(table, socket.data.user.id);
+    socket.emit("table:update", { table: tableSummary(table), game });
   }
   broadcastLobby();
+};
+const finishTurfIfNeeded = (table) => {
+  if (!table.game?.winner) return;
+  table.status = "finished";
+  db.recordGame(table.game.players.filter((player) => !player.id.toString().startsWith("guest:")).map((player) => player.id), table.game.winner);
 };
 const leaveCurrentTable = (socket, disconnected = false) => {
   const table = tables.get(socket.data.tableId);
@@ -137,6 +145,7 @@ io.on("connection", (socket) => {
       id,
       name: String(payload?.name || `${user.username}'s Table`).trim().slice(0, 28),
       hostId: user.id,
+      type: payload?.gameType === "turf" ? "turf" : "cards",
       maxSeats: Math.max(2, Math.min(6, Number(payload?.maxSeats) || 4)),
       status: "waiting",
       players: [{ ...user, socketId: socket.id }],
@@ -174,7 +183,8 @@ io.on("connection", (socket) => {
     if (!table || table.hostId !== user.id) return reply({ error: "Only the host can start the deal." });
     if (table.players.length < 2) return reply({ error: "You need at least 2 players." });
     if (table.status === "playing") return reply({ error: "The deal already started." });
-    startGame(table);
+    if (table.type === "turf") startTurfGame(table);
+    else startGame(table);
     emitTable(table);
     reply({ ok: true });
   });
@@ -183,6 +193,7 @@ io.on("connection", (socket) => {
     const table = tables.get(socket.data.tableId);
     try {
       if (!table) throw new Error("Table not found.");
+      if (table.type === "turf") throw new Error("Use the Turf Wars controls.");
       const result = playCard(table, user.id, payload?.cardId, payload?.chosenSuit, payload?.targetId);
       if (result.ended) db.recordGame(table.game.players.map((p) => p.id), result.winnerId);
       emitTable(table);
@@ -194,9 +205,34 @@ io.on("connection", (socket) => {
     const table = tables.get(socket.data.tableId);
     try {
       if (!table) throw new Error("Table not found.");
+      if (table.type === "turf") throw new Error("Use the Turf Wars controls.");
       drawAndPass(table, user.id);
       emitTable(table);
       reply({ ok: true });
+    } catch (error) { reply({ error: error.message }); }
+  });
+
+  socket.on("turf:roll", (_payload, reply = () => {}) => {
+    const table = tables.get(socket.data.tableId);
+    try {
+      if (!table || table.type !== "turf") throw new Error("Turf table not found.");
+      rollDice(table, user.id); finishTurfIfNeeded(table); emitTable(table); reply({ ok: true });
+    } catch (error) { reply({ error: error.message }); }
+  });
+
+  socket.on("turf:buy", (_payload, reply = () => {}) => {
+    const table = tables.get(socket.data.tableId);
+    try {
+      if (!table || table.type !== "turf") throw new Error("Turf table not found.");
+      buyProperty(table, user.id); finishTurfIfNeeded(table); emitTable(table); reply({ ok: true });
+    } catch (error) { reply({ error: error.message }); }
+  });
+
+  socket.on("turf:pass", (_payload, reply = () => {}) => {
+    const table = tables.get(socket.data.tableId);
+    try {
+      if (!table || table.type !== "turf") throw new Error("Turf table not found.");
+      passProperty(table, user.id); finishTurfIfNeeded(table); emitTable(table); reply({ ok: true });
     } catch (error) { reply({ error: error.message }); }
   });
 

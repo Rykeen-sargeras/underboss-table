@@ -40,9 +40,9 @@
           <strong>Underboss<br>Table</strong><small>Fast card warfare · 2–6 players</small><em>Enter the backroom →</em>
         </button>
         <button class="game-choice turf-choice" data-select-game="turf">
-          <span class="choice-index">02</span><span class="choice-status building">IN DEVELOPMENT</span>
+          <span class="choice-index">02</span><span class="choice-status live">PLAYABLE ALPHA</span>
           <span class="choice-art board-art"><i></i><i></i><i></i><i></i><b>♛</b></span>
-          <strong>Turf<br>Wars</strong><small>Property, tribute &amp; power · 2–6 players</small><em>See the first look →</em>
+          <strong>Turf<br>Wars</strong><small>Property, tribute &amp; power · 2–6 players</small><em>Take the city →</em>
         </button>
       </div>
       <div class="download-strip"><div><span>▣</span><p><b>Play on Windows</b><small>Install the desktop app and use the same account.</small></p></div><a class="button gold" href="https://github.com/Rykeen-sargeras/underboss-table/releases/latest/download/Underboss-Table-Setup-1.0.0.exe">Download for Windows</a></div>
@@ -97,16 +97,24 @@
       </div>
     </section>
 
-    <section id="turfView" class="turf-shell hidden">
-      <button class="text-button turf-back" id="leaveTurfButton">← Game menu</button>
-      <div class="turf-intro"><p class="eyebrow">First look · Game two</p><h1>Turf Wars</h1><p>Buy blocks, build rackets, collect tribute, and bankrupt rival families. This will be an original property-trading game built for the same accounts and crews.</p><div class="turf-meta"><span><b>2–6</b> families</span><span><b>45–90</b> minutes</span><span><b>1</b> city</span></div></div>
-      <div class="board-preview" aria-label="Turf Wars board concept">
-        <div class="board-ring">
-          <span class="property p1">THE DOCKS<small>$60</small></span><span class="property p2 orange-tile">LITTLE ITALY<small>$100</small></span><span class="property p3">CITY HALL<small>PAY $50</small></span><span class="property p4 red-tile">CASINO ROW<small>$220</small></span><span class="property p5">BACKROOM<small>DRAW A CARD</small></span><span class="property p6 gold-tile">UPTOWN<small>$320</small></span><span class="property p7">THE CAN<small>JUST VISITING</small></span><span class="property p8 blue-tile">WATERFRONT<small>$400</small></span>
-          <div class="board-center"><span>♛</span><b>TURF WARS</b><small>OWN THE CITY</small></div>
-        </div>
+    <section id="turfView" class="turf-play-shell hidden">
+      <div class="turf-toolbar">
+        <button class="text-button" id="leaveTurfButton">← Game menu</button>
+        <div><strong id="turfHeader">Turf Wars</strong><small id="turfCode">OWN THE CITY</small></div>
+        <button class="button gold" id="createTurfButton">+ Open turf table</button>
       </div>
-      <div class="development-note"><b>Now being built</b><span>Next milestone: movement, property ownership, rent, and a complete first playable board.</span></div>
+      <div id="turfLobby" class="turf-lobby-grid">
+        <section class="panel tables-panel"><div class="panel-heading"><h2>Open turf wars</h2><span class="live-pill"><i></i> LIVE</span></div><div id="turfTableList" class="table-list"></div></section>
+        <aside class="panel turf-rules"><p class="eyebrow">How it plays</p><h2>Own the city.</h2><ol class="compact-rules"><li>Roll and move around 16 city blocks.</li><li>Buy open turf or pay tribute to its owner.</li><li>Pass Family HQ to collect $200.</li><li>Last solvent family wins the city.</li></ol><p class="alpha-note">Playable alpha · property auctions and rackets are coming next.</p></aside>
+      </div>
+      <div id="turfTableArea" class="turf-table-area hidden">
+        <div id="turfBoard" class="turf-board" aria-label="Turf Wars game board"></div>
+        <aside class="turf-sidebar">
+          <p class="eyebrow">The families</p><div id="turfPlayerList" class="turf-player-list"></div>
+          <div class="turf-action-card"><div id="turfDice" class="turf-dice">— &nbsp; —</div><p id="turfMessage">Waiting for the host to start.</p><button class="button gold full" id="turfStartButton">Start the turf war</button><button class="button gold full hidden" id="turfRollButton">Roll the dice</button><button class="button gold full hidden" id="turfBuyButton">Buy this turf</button><button class="button ghost full hidden" id="turfPassButton">Pass</button></div>
+          <button class="text-button turf-leave-table" id="leaveTurfTableButton">Leave turf table</button>
+        </aside>
+      </div>
     </section>
   </main>
 
