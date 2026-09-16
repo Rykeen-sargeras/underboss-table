@@ -33,6 +33,5 @@
     "win": { "target": "nsis", "artifactName": "Underboss-Table-Setup-${version}.${ext}" },
     "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
   },
-  "engines": { "node": ">=20" },
-  "packageManager": "pnpm@11.19.0"
+  "engines": { "node": ">=20 <24" }
 }
