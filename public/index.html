@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <meta name="description" content="Underboss Table — a real-time mafia-themed shedding card game." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <title>Underboss Table</title>
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <button class="wordmark" id="homeButton" aria-label="Go to lobby">
+      <span class="crown">♛</span>
+      <span>UNDERBOSS</span>
+      <small>TABLE</small>
+    </button>
+    <nav class="top-actions" aria-label="Account actions">
+      <button class="text-button" id="rulesButton">How to play</button>
+      <button class="profile-chip hidden" id="profileButton">
+        <span class="avatar tiny" id="headerAvatar"></span>
+        <span id="headerName"></span>
+      </button>
+      <button class="button gold" id="signInButton">Sign in</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="guestView" class="guest-shell">
+      <div class="guest-copy">
+        <p class="eyebrow">The city changes hands nightly</p>
+        <h1>Deal cards.<br><em>Settle scores.</em></h1>
+        <p class="lede">A fast, ruthless card game for 2–6 players. Match the family color or rank, play dirty, and empty your hand before the other crews.</p>
+        <div class="guest-actions">
+          <button class="button gold large" data-open-auth="register">Claim your seat</button>
+          <button class="button ghost large" data-open-auth="login">I have an account</button>
+        </div>
+        <div class="game-notes">
+          <span><b>2–6</b> players</span><span><b>7</b> cards each</span><span><b>1</b> city to own</span>
+        </div>
+      </div>
+      <div class="guest-table" aria-label="Preview of the card table">
+        <div class="spotlight"></div>
+        <div class="preview-card back c1"><span>♛</span></div>
+        <div class="preview-card suit-blood c2"><b>7</b><span>◆</span><small>BLOOD</small></div>
+        <div class="preview-card suit-gold c3"><b>↻</b><span>DOUBLE<br>CROSS</span></div>
+        <div class="preview-card suit-ice c4"><b>+2</b><span>SHAKE<br>DOWN</span></div>
+        <div class="table-seal"><span>THE</span><b>FAMILY</b><small>NEVER FORGETS</small></div>
+      </div>
+    </section>
+
+    <section id="lobbyView" class="app-shell hidden">
+      <div class="lobby-heading">
+        <div><p class="eyebrow">Live tables</p><h1>Choose your crew.</h1></div>
+        <button class="button gold" id="createTableButton">+ Open a table</button>
+      </div>
+      <div class="lobby-grid">
+        <section class="panel tables-panel">
+          <div class="panel-heading"><h2>Tables</h2><span class="live-pill"><i></i> LIVE</span></div>
+          <div id="tableList" class="table-list"></div>
+        </section>
+        <aside class="panel family-panel">
+          <p class="eyebrow">Your standing</p>
+          <div class="family-profile"><span class="avatar large" id="lobbyAvatar"></span><div><h2 id="lobbyName"></h2><p id="lobbyRecord">New to the family</p></div></div>
+          <div class="rule"></div>
+          <h3>The code</h3>
+          <ol class="compact-rules">
+            <li>Match the color or rank.</li>
+            <li>Special cards change the deal.</li>
+            <li>Empty your hand to take the city.</li>
+          </ol>
+        </aside>
+      </div>
+    </section>
+
+    <section id="tableView" class="game-shell hidden">
+      <div class="game-toolbar">
+        <button class="text-button back-button" id="leaveTableButton">← Leave table</button>
+        <div><span id="tableName">Backroom Table</span><small id="tableCode">TABLE 101</small></div>
+        <button class="button gold" id="startGameButton">Start the deal</button>
+      </div>
+      <div class="felt-wrap">
+        <div class="felt">
+          <div id="playerSeats" class="player-seats"></div>
+          <div id="waitingState" class="waiting-state">
+            <span class="seal-icon">♛</span><h2>Waiting on the crew</h2><p>Share the table number. The host starts when everyone is seated.</p>
+          </div>
+          <div id="gameCenter" class="game-center hidden">
+            <div class="turn-banner" id="turnBanner">Your move</div>
+            <div class="deck-zone">
+              <button id="drawPile" class="game-card back interactive" aria-label="Draw a card"><span>♛</span><small id="deckCount">92</small></button>
+              <div id="discardCard" class="game-card"></div>
+            </div>
+            <p id="gameMessage" class="game-message"></p>
+          </div>
+        </div>
+        <div id="handArea" class="hand-area hidden"><div class="hand-label"><span>YOUR HAND</span><small id="handHint"></small></div><div id="hand" class="hand"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="authDialog" class="modal">
+    <button class="modal-close" data-close-dialog aria-label="Close">×</button>
+    <p class="eyebrow">Members only</p><h2 id="authTitle">Sign in</h2>
+    <div class="auth-tabs"><button data-auth-tab="login" class="active">Sign in</button><button data-auth-tab="register">Create account</button></div>
+    <form id="authForm">
+      <label>Username<input id="authUsername" name="username" autocomplete="username" minlength="3" maxlength="20" required placeholder="vinny_vegas" /></label>
+      <label>Password<input id="authPassword" name="password" type="password" autocomplete="current-password" minlength="8" required placeholder="8 characters minimum" /></label>
+      <p class="form-error" id="authError"></p>
+      <button class="button gold full" type="submit">Enter the backroom</button>
+    </form>
+  </dialog>
+
+  <dialog id="profileDialog" class="modal">
+    <button class="modal-close" data-close-dialog aria-label="Close">×</button>
+    <p class="eyebrow">Your account</p><h2>Family profile</h2>
+    <div class="profile-editor"><span class="avatar xlarge" id="profileAvatar"></span><div><strong id="profileName"></strong><small id="profileStats"></small></div></div>
+    <form id="avatarForm"><label class="upload-label">Change profile picture<input type="file" id="avatarInput" accept="image/png,image/jpeg,image/webp,image/gif" /></label><small>JPG, PNG, GIF or WebP · 1 MB max</small><p class="form-error" id="avatarError"></p><button class="button gold full" type="submit">Save picture</button></form>
+    <button class="button ghost full" id="logoutButton">Sign out</button>
+  </dialog>
+
+  <dialog id="createDialog" class="modal small-modal">
+    <button class="modal-close" data-close-dialog aria-label="Close">×</button>
+    <p class="eyebrow">Call a meeting</p><h2>Open a table</h2>
+    <form id="createForm"><label>Table name<input id="newTableName" maxlength="28" required value="Backroom Game" /></label><label>Seats<select id="newTableSeats"><option value="2">2 players</option><option value="3">3 players</option><option value="4" selected>4 players</option><option value="5">5 players</option><option value="6">6 players</option></select></label><button class="button gold full" type="submit">Open the table</button></form>
+  </dialog>
+
+  <dialog id="rulesDialog" class="modal rules-modal">
+    <button class="modal-close" data-close-dialog aria-label="Close">×</button><p class="eyebrow">House rules</p><h2>How the deal works</h2>
+    <div class="rules-grid"><div><b>1</b><p>Play a card matching the top card’s color or rank.</p></div><div><b>2</b><p>No match? Draw one and your turn passes.</p></div><div><b>3</b><p>First player with an empty hand takes the city.</p></div></div>
+    <div class="special-list"><p><span>LAY LOW</span> Skip the next player.</p><p><span>DOUBLE CROSS</span> Reverse the order.</p><p><span>SHAKEDOWN</span> Next player draws 2.</p><p><span>THE DON</span> Choose the next color.</p><p><span>HIT JOB</span> Choose a color; next player draws 4.</p><p><span>TRADE HANDS</span> Swap your hand with any player.</p><p><span>FUCK YOU +10</span> Next player draws 10.</p></div>
+  </dialog>
+
+  <dialog id="targetDialog" class="modal suit-modal"><p class="eyebrow">Make the trade</p><h2>Choose a player</h2><div id="targetChoices" class="target-choices"></div></dialog>
+  <dialog id="suitDialog" class="modal suit-modal"><p class="eyebrow">Call the family</p><h2>Choose a color</h2><div class="suit-choices"><button data-suit="blood">Blood</button><button data-suit="cash">Cash</button><button data-suit="gold">Gold</button><button data-suit="ice">Ice</button><button data-suit="orange">Orange</button></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

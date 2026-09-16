@@ -1,0 +1,38 @@
+{
+  "name": "underboss-table",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A mafia-themed, real-time shedding card game for web and Windows.",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "dev": "node --watch server/index.js",
+    "start": "node server/index.js",
+    "desktop": "electron .",
+    "dist:win": "electron-builder --win nsis",
+    "test": "node --test test/game.test.js",
+    "test:integration": "node scripts/integration.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12",
+    "socket.io-client": "^4.8.1"
+  },
+  "build": {
+    "appId": "com.underbosstable.app",
+    "productName": "Underboss Table",
+    "directories": { "output": "release" },
+    "files": ["desktop/**/*", "package.json"],
+    "win": { "target": "nsis", "artifactName": "Underboss-Table-Setup-${version}.${ext}" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
+  },
+  "engines": { "node": ">=20" },
+  "packageManager": "pnpm@11.19.0"
+}
