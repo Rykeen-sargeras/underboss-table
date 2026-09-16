@@ -12,7 +12,7 @@ function table() {
 test("starts Turf Wars with cash, tokens, and the full board", () => {
   const room = table(); startTurfGame(room); const view = turfPublicState(room);
   assert.equal(room.status, "playing");
-  assert.equal(view.board.length, 16);
+  assert.equal(view.board.length, 28);
   assert.equal(view.players.length, 2);
   assert.ok(view.players.every((player) => player.cash === 1500 && player.position === 0));
   assert.equal(view.phase, "roll");

@@ -1,6 +1,6 @@
 # Underboss Table
 
-An original, mafia-themed real-time shedding card game for 2–6 players. It runs in a browser and includes an Electron wrapper for a downloadable Windows installer.
+An original, mafia-themed real-time shedding card game for 2–10 players. It runs in a browser and includes an Electron wrapper for a downloadable Windows installer.
 
 ## What is included
 

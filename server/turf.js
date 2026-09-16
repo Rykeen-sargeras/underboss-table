@@ -1,20 +1,32 @@
 const BOARD = [
   { name: "Family HQ", type: "start" },
   { name: "The Docks", type: "property", price: 60, rent: 10, color: "ice" },
-  { name: "Street Tax", type: "fee", amount: 50 },
-  { name: "The Speakeasy", type: "property", price: 80, rent: 14, color: "orange" },
-  { name: "Little Italy", type: "property", price: 100, rent: 18, color: "orange" },
+  { name: "Warehouse Row", type: "property", price: 70, rent: 12, color: "ice" },
   { name: "Backroom Deal", type: "event" },
-  { name: "City Hall", type: "property", price: 140, rent: 24, color: "gold" },
+  { name: "The Speakeasy", type: "property", price: 90, rent: 15, color: "orange" },
+  { name: "Little Italy", type: "property", price: 110, rent: 18, color: "orange" },
+  { name: "Street Tax", type: "fee", amount: 50 },
   { name: "The Can", type: "jail" },
+  { name: "City Hall", type: "property", price: 140, rent: 24, color: "gold" },
+  { name: "Courthouse Steps", type: "property", price: 155, rent: 26, color: "gold" },
+  { name: "Backroom Deal", type: "event" },
   { name: "Casino Row", type: "property", price: 180, rent: 30, color: "blood" },
-  { name: "Protection Fee", type: "fee", amount: 75 },
+  { name: "Velvet Lounge", type: "property", price: 195, rent: 33, color: "blood" },
   { name: "Garment District", type: "property", price: 200, rent: 34, color: "cash" },
+  { name: "Free Parking", type: "jail" },
   { name: "The Nightclub", type: "property", price: 240, rent: 40, color: "blood" },
+  { name: "Protection Fee", type: "fee", amount: 75 },
+  { name: "Diamond Market", type: "property", price: 255, rent: 44, color: "cash" },
   { name: "Uptown", type: "property", price: 280, rent: 48, color: "gold" },
   { name: "Backroom Deal", type: "event" },
+  { name: "Park Avenue", type: "property", price: 310, rent: 52, color: "orange" },
+  { name: "Go to The Can", type: "jail" },
   { name: "Waterfront", type: "property", price: 350, rent: 60, color: "ice" },
-  { name: "Union Hall", type: "property", price: 400, rent: 75, color: "cash" }
+  { name: "Union Hall", type: "property", price: 370, rent: 65, color: "cash" },
+  { name: "Backroom Deal", type: "event" },
+  { name: "Empire Towers", type: "property", price: 390, rent: 70, color: "gold" },
+  { name: "Boss's Tribute", type: "fee", amount: 100 },
+  { name: "The Penthouse", type: "property", price: 400, rent: 75, color: "orange" }
 ];
 
 function startTurfGame(table) {

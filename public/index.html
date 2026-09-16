@@ -37,7 +37,7 @@
         <button class="game-choice cards-choice" data-select-game="cards">
           <span class="choice-index">01</span><span class="choice-status live">PLAY NOW</span>
           <span class="choice-art"><i class="mini-card red">7</i><i class="mini-card black">♛</i><i class="mini-card orange">+10</i></span>
-          <strong>Underboss<br>Table</strong><small>Fast card warfare · 2–6 players</small><em>Enter the backroom →</em>
+          <strong>Underboss<br>Table</strong><small>Fast card warfare · 2–10 players</small><em>Enter the backroom →</em>
         </button>
         <button class="game-choice turf-choice" data-select-game="turf">
           <span class="choice-index">02</span><span class="choice-status live">PLAYABLE ALPHA</span>
@@ -105,7 +105,7 @@
       </div>
       <div id="turfLobby" class="turf-lobby-grid">
         <section class="panel tables-panel"><div class="panel-heading"><h2>Open turf wars</h2><span class="live-pill"><i></i> LIVE</span></div><div id="turfTableList" class="table-list"></div></section>
-        <aside class="panel turf-rules"><p class="eyebrow">How it plays</p><h2>Own the city.</h2><ol class="compact-rules"><li>Roll and move around 16 city blocks.</li><li>Buy open turf or pay tribute to its owner.</li><li>Pass Family HQ to collect $200.</li><li>Last solvent family wins the city.</li></ol><p class="alpha-note">Playable alpha · property auctions and rackets are coming next.</p></aside>
+        <aside class="panel turf-rules"><p class="eyebrow">How it plays</p><h2>Own the city.</h2><ol class="compact-rules"><li>Roll and move around 28 city blocks.</li><li>Buy open turf or pay tribute to its owner.</li><li>Pass Family HQ to collect $200.</li><li>Last solvent family wins the city.</li></ol><p class="alpha-note">Playable alpha · property auctions and rackets are coming next.</p></aside>
       </div>
       <div id="turfTableArea" class="turf-table-area hidden">
         <div id="turfBoard" class="turf-board" aria-label="Turf Wars game board"></div>
@@ -144,7 +144,7 @@
   <dialog id="createDialog" class="modal small-modal">
     <button class="modal-close" data-close-dialog aria-label="Close">×</button>
     <p class="eyebrow">Call a meeting</p><h2>Open a table</h2>
-    <form id="createForm"><label>Table name<input id="newTableName" maxlength="28" required value="Backroom Game" /></label><label>Seats<select id="newTableSeats"><option value="2">2 players</option><option value="3">3 players</option><option value="4" selected>4 players</option><option value="5">5 players</option><option value="6">6 players</option></select></label><button class="button gold full" type="submit">Open the table</button></form>
+    <form id="createForm"><label>Table name<input id="newTableName" maxlength="28" required value="Backroom Game" /></label><label>Seats<select id="newTableSeats"><option value="2">2 players</option><option value="3">3 players</option><option value="4" selected>4 players</option><option value="5">5 players</option><option value="6">6 players</option><option value="7">7 players</option><option value="8">8 players</option><option value="9">9 players</option><option value="10">10 players</option></select></label><button class="button gold full" type="submit">Open the table</button></form>
   </dialog>
 
   <dialog id="rulesDialog" class="modal rules-modal">

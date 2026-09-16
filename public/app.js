@@ -140,7 +140,13 @@ function renderTable() {
   $$("#hand .game-card:not(.unplayable)").forEach((button) => button.onclick = () => playSelected(button.dataset.cardId));
 }
 
-const turfGrid = [[5,5],[5,4],[5,3],[5,2],[5,1],[4,1],[3,1],[2,1],[1,1],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5]];
+const turfGrid = [
+  [8,8],[8,7],[8,6],[8,5],[8,4],[8,3],[8,2],[8,1],
+  [7,1],[6,1],[5,1],[4,1],[3,1],[2,1],[1,1],
+  [1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8],
+  [2,8],[3,8],[4,8],[5,8],[6,8],[7,8]
+];
+const turfCenter = (waiting = false) => `<div class="turf-board-center"><div class="center-deal">BACKROOM<br>DEAL</div><div class="center-brand"><span>♛</span><b>TURF WARS</b><small>${waiting ? "WAITING FOR THE FAMILIES" : "OWN THE CITY"}</small></div><div class="center-deal bottom">CITY<br>LEDGER</div></div>`;
 function renderTurf() {
   const inTable = state.table?.type === "turf";
   $("#turfLobby").classList.toggle("hidden", inTable);
@@ -152,14 +158,16 @@ function renderTurf() {
   $("#turfPlayerList").innerHTML = players.map((p) => `<div class="turf-player ${state.game?.turnPlayerId === p.id ? "active" : ""} ${p.bankrupt ? "bankrupt" : ""}"><span class="turf-token token-${p.token}">${p.token + 1}</span><div><b>${escapeHtml(p.username)}</b><small>${p.bankrupt ? "OUT OF BUSINESS" : `$${p.cash.toLocaleString()}`}</small></div></div>`).join("");
   const board = state.game?.board || [];
   if (!board.length) {
-    $("#turfBoard").innerHTML = `<div class="turf-board-center"><span>♛</span><b>TURF WARS</b><small>WAITING FOR THE FAMILIES</small></div>`;
+    $("#turfBoard").innerHTML = turfCenter(true);
   } else {
     $("#turfBoard").innerHTML = board.map((space, index) => {
       const [row, col] = turfGrid[index]; const ownerId = state.game.owners[index]; const owner = players.find((p) => p.id === ownerId);
       const tokens = players.filter((p) => !p.bankrupt && p.position === index).map((p) => `<i class="turf-token token-${p.token}">${p.token + 1}</i>`).join("");
       const detail = space.type === "property" ? `$${space.price} · rent $${space.rent}` : space.type === "fee" ? `PAY $${space.amount}` : space.type === "start" ? "COLLECT $200" : space.type === "event" ? "TAKE A CHANCE" : "JUST VISITING";
-      return `<div class="turf-space ${space.type} ${space.color || ""} ${state.game.pendingProperty === index ? "pending" : ""}" style="grid-row:${row};grid-column:${col}"><strong>${escapeHtml(space.name)}</strong><small>${detail}</small>${owner ? `<em>Owned by ${escapeHtml(owner.username)}</em>` : ""}<span class="space-tokens">${tokens}</span></div>`;
-    }).join("") + `<div class="turf-board-center"><span>♛</span><b>TURF WARS</b><small>OWN THE CITY</small></div>`;
+      const corner = [0, 7, 14, 21].includes(index) ? "corner" : "";
+      const side = index === 0 || index <= 7 ? "bottom" : index <= 14 ? "left" : index <= 21 ? "top" : "right";
+      return `<div class="turf-space side-${side} ${space.type} ${space.color || ""} ${corner} ${state.game.pendingProperty === index ? "pending" : ""}" style="grid-row:${row};grid-column:${col}"><strong>${escapeHtml(space.name)}</strong><small>${detail}</small>${owner ? `<em>Owned by ${escapeHtml(owner.username)}</em>` : ""}<span class="space-tokens">${tokens}</span></div>`;
+    }).join("") + turfCenter();
   }
   const isHost = state.table.hostId === state.user.id; const started = !!state.game; const myTurn = state.game?.turnPlayerId === state.user.id; const pending = state.game?.phase === "buy-or-pass";
   $("#turfStartButton").classList.toggle("hidden", !isHost || started);
@@ -204,8 +212,14 @@ $("#logoutButton").onclick = signOut;
 $("#homeButton").onclick = () => showView("guest");
 $$('[data-select-game]').forEach((button) => button.onclick = () => chooseGame(button.dataset.selectGame));
 $("#leaveTurfButton").onclick = async () => { if (state.table?.type === "turf" && !(await emit("table:leave", {}))) return; state.table = null; state.game = null; showView("guest"); };
-$("#createTableButton").onclick = () => { state.createGameType = "cards"; $("#newTableName").placeholder = "The Gilded Room"; openDialog("createDialog"); };
-$("#createTurfButton").onclick = () => { state.createGameType = "turf"; $("#newTableName").placeholder = "The Five Families"; openDialog("createDialog"); };
+function prepareCreateDialog(type) {
+  state.createGameType = type; $("#newTableName").placeholder = type === "turf" ? "The Five Families" : "The Gilded Room";
+  $$("#newTableSeats option").forEach((option) => option.disabled = type === "turf" && Number(option.value) > 6);
+  if (type === "turf" && Number($("#newTableSeats").value) > 6) $("#newTableSeats").value = "6";
+  openDialog("createDialog");
+}
+$("#createTableButton").onclick = () => prepareCreateDialog("cards");
+$("#createTurfButton").onclick = () => prepareCreateDialog("turf");
 $("#authForm").onsubmit = async (event) => {
   event.preventDefault(); $("#authError").textContent = "";
   try {

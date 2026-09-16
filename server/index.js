@@ -141,12 +141,13 @@ io.on("connection", (socket) => {
   socket.on("table:create", (payload, reply = () => {}) => {
     if (socket.data.tableId) return reply({ error: "Leave your current table first." });
     const id = String(++tableSequence);
+    const gameType = payload?.gameType === "turf" ? "turf" : "cards";
     const table = {
       id,
       name: String(payload?.name || `${user.username}'s Table`).trim().slice(0, 28),
       hostId: user.id,
-      type: payload?.gameType === "turf" ? "turf" : "cards",
-      maxSeats: Math.max(2, Math.min(6, Number(payload?.maxSeats) || 4)),
+      type: gameType,
+      maxSeats: Math.max(2, Math.min(gameType === "turf" ? 6 : 10, Number(payload?.maxSeats) || 4)),
       status: "waiting",
       players: [{ ...user, socketId: socket.id }],
       game: null
