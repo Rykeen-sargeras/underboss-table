@@ -1,8 +1,8 @@
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
-const state = { token: localStorage.getItem("underboss_token"), user: null, socket: null, table: null, game: null, tables: [], authMode: "login", pendingCard: null, pendingTarget: null };
+const state = { token: localStorage.getItem("underboss_token"), user: null, socket: null, table: null, game: null, tables: [], authMode: "login", selectedGame: null, pendingCard: null, pendingTarget: null };
 
-const views = { guest: $("#guestView"), lobby: $("#lobbyView"), table: $("#tableView") };
+const views = { guest: $("#guestView"), lobby: $("#lobbyView"), table: $("#tableView"), turf: $("#turfView") };
 function showView(name) { Object.entries(views).forEach(([key, el]) => el.classList.toggle("hidden", key !== name)); }
 function initials(name = "?") { return name.slice(0, 2).toUpperCase(); }
 function setAvatar(el, user) {
@@ -27,21 +27,25 @@ function dialog(id) { return document.getElementById(id); }
 function openDialog(id) { const el = dialog(id); if (!el.open) el.showModal(); }
 function closeDialogs() { $$('dialog[open]').forEach((el) => el.close()); }
 
-function setAuthenticated(user, token = state.token) {
+function setAuthenticated(user, token = state.token, navigate = true) {
   state.user = user; state.token = token;
   localStorage.setItem("underboss_token", token);
   $("#signInButton").classList.add("hidden"); $("#profileButton").classList.remove("hidden");
   $("#headerName").textContent = user.username; $("#lobbyName").textContent = user.username; $("#profileName").textContent = user.username;
   $("#lobbyRecord").textContent = user.games ? `${user.wins} wins · ${user.games} deals` : "New to the family";
-  $("#profileStats").textContent = `${user.wins} wins · ${user.games} deals played`;
+  $("#profileStats").textContent = user.guest ? "Mobster Casual · temporary session" : `${user.wins} wins · ${user.games} deals played`;
   [$("#headerAvatar"), $("#lobbyAvatar"), $("#profileAvatar")].forEach((el) => setAvatar(el, user));
-  connectSocket(); showView("lobby");
+  $("#avatarForm").classList.toggle("hidden", !!user.guest); $("#casualProfileNote").classList.toggle("hidden", !user.guest);
+  connectSocket();
+  if (navigate) openSelectedGame(); else showView("guest");
 }
 function signOut() {
   state.socket?.disconnect(); Object.assign(state, { token: null, user: null, socket: null, table: null, game: null });
   localStorage.removeItem("underboss_token"); closeDialogs();
   $("#signInButton").classList.remove("hidden"); $("#profileButton").classList.add("hidden"); showView("guest");
 }
+function openSelectedGame() { showView(state.selectedGame === "turf" ? "turf" : "lobby"); }
+function chooseGame(game) { state.selectedGame = game; if (state.user) openSelectedGame(); else openAuth("login"); }
 function connectSocket() {
   state.socket?.disconnect();
   state.socket = io({ auth: { token: state.token } });
@@ -154,7 +158,9 @@ $("#signInButton").onclick = () => openAuth("login");
 $("#profileButton").onclick = () => openDialog("profileDialog");
 $("#rulesButton").onclick = () => openDialog("rulesDialog");
 $("#logoutButton").onclick = signOut;
-$("#homeButton").onclick = () => { if (state.user && !state.table) showView("lobby"); };
+$("#homeButton").onclick = () => showView("guest");
+$$('[data-select-game]').forEach((button) => button.onclick = () => chooseGame(button.dataset.selectGame));
+$("#leaveTurfButton").onclick = () => showView("guest");
 $("#createTableButton").onclick = () => openDialog("createDialog");
 $("#authForm").onsubmit = async (event) => {
   event.preventDefault(); $("#authError").textContent = "";
@@ -163,6 +169,11 @@ $("#authForm").onsubmit = async (event) => {
     const data = await api(`/api/auth/${state.authMode}`, { method: "POST", body });
     closeDialogs(); setAuthenticated(data.user, data.token);
   } catch (error) { $("#authError").textContent = error.message; }
+};
+$("#guestLoginButton").onclick = async () => {
+  $("#authError").textContent = "";
+  try { const data = await api("/api/auth/guest", { method: "POST", body: "{}" }); closeDialogs(); setAuthenticated(data.user, data.token); toast(`Welcome, ${data.user.username}.`); }
+  catch (error) { $("#authError").textContent = error.message; }
 };
 $("#avatarForm").onsubmit = async (event) => {
   event.preventDefault(); $("#avatarError").textContent = "";
@@ -183,6 +194,6 @@ $$('dialog').forEach((modal) => modal.addEventListener("click", (event) => { if 
 
 (async function boot() {
   if (!state.token) return showView("guest");
-  try { const data = await api("/api/me"); setAuthenticated(data.user); }
+  try { const data = await api("/api/me"); setAuthenticated(data.user, state.token, false); }
   catch { signOut(); }
 })();

@@ -24,11 +24,13 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-const tokenFor = (user) => jwt.sign({ sub: user.id, username: user.username }, JWT_SECRET, { expiresIn: "30d" });
+const tokenFor = (user) => jwt.sign({ sub: user.id, username: user.username, guest: !!user.guest }, JWT_SECRET, { expiresIn: user.guest ? "24h" : "30d" });
+const guestUser = (decoded) => ({ id: decoded.sub, username: decoded.username, avatar: null, wins: 0, games: 0, guest: true });
 const auth = (req, res, next) => {
   try {
     const token = req.headers.authorization?.replace(/^Bearer /, "");
-    req.user = db.findById(jwt.verify(token, JWT_SECRET).sub);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded.guest ? guestUser(decoded) : db.findById(decoded.sub);
     if (!req.user) throw new Error("Missing user");
     next();
   } catch { res.status(401).json({ error: "Sign in to continue." }); }
@@ -57,8 +59,16 @@ app.post("/api/auth/login", async (req, res) => {
   const user = db.cleanUser(row);
   res.json({ token: tokenFor(user), user });
 });
-app.get("/api/me", auth, (req, res) => res.json({ user: db.cleanUser(req.user) }));
+app.post("/api/auth/guest", (_req, res) => {
+  const first = ["Lucky", "Quiet", "Fast", "Velvet", "Tiny", "Sharp", "Midnight", "Silver"];
+  const second = ["Capo", "Gambler", "Driver", "Fixer", "Consigliere", "Bookie", "Enforcer", "Rook"];
+  const username = `${first[Math.floor(Math.random() * first.length)]}${second[Math.floor(Math.random() * second.length)]}${Math.floor(100 + Math.random() * 900)}`;
+  const user = { id: `guest:${require("crypto").randomUUID()}`, username, avatar: null, wins: 0, games: 0, guest: true };
+  res.status(201).json({ token: tokenFor(user), user });
+});
+app.get("/api/me", auth, (req, res) => res.json({ user: req.user.guest ? req.user : db.cleanUser(req.user) }));
 app.post("/api/me/avatar", auth, upload.single("avatar"), (req, res) => {
+  if (req.user.guest) return res.status(403).json({ error: "Create an account to save a profile picture." });
   if (!req.file) return res.status(400).json({ error: "Choose a JPG, PNG, GIF, or WebP under 1 MB." });
   const avatar = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
   res.json({ user: db.updateAvatar(req.user.id, avatar) });
@@ -105,9 +115,12 @@ const leaveCurrentTable = (socket, disconnected = false) => {
 io.use((socket, next) => {
   try {
     const decoded = jwt.verify(socket.handshake.auth?.token, JWT_SECRET);
-    const row = db.findById(decoded.sub);
-    if (!row) throw new Error("Unknown user");
-    socket.data.user = db.cleanUser(row);
+    if (decoded.guest) socket.data.user = guestUser(decoded);
+    else {
+      const row = db.findById(decoded.sub);
+      if (!row) throw new Error("Unknown user");
+      socket.data.user = db.cleanUser(row);
+    }
     next();
   } catch { next(new Error("AUTH_REQUIRED")); }
 });

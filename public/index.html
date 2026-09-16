@@ -31,27 +31,21 @@
   </header>
 
   <main>
-    <section id="guestView" class="guest-shell">
-      <div class="guest-copy">
-        <p class="eyebrow">The city changes hands nightly</p>
-        <h1>Deal cards.<br><em>Settle scores.</em></h1>
-        <p class="lede">A fast, ruthless card game for 2–6 players. Match the family color or rank, play dirty, and empty your hand before the other crews.</p>
-        <div class="guest-actions">
-          <button class="button gold large" data-open-auth="register">Claim your seat</button>
-          <button class="button ghost large" data-open-auth="login">I have an account</button>
-        </div>
-        <div class="game-notes">
-          <span><b>2–6</b> players</span><span><b>7</b> cards each</span><span><b>1</b> city to own</span>
-        </div>
+    <section id="guestView" class="menu-shell">
+      <div class="menu-heading"><p class="eyebrow">Welcome to the family</p><h1>Choose your game.</h1><p>One account. Two ways to take the city.</p></div>
+      <div class="game-picker">
+        <button class="game-choice cards-choice" data-select-game="cards">
+          <span class="choice-index">01</span><span class="choice-status live">PLAY NOW</span>
+          <span class="choice-art"><i class="mini-card red">7</i><i class="mini-card black">♛</i><i class="mini-card orange">+10</i></span>
+          <strong>Underboss<br>Table</strong><small>Fast card warfare · 2–6 players</small><em>Enter the backroom →</em>
+        </button>
+        <button class="game-choice turf-choice" data-select-game="turf">
+          <span class="choice-index">02</span><span class="choice-status building">IN DEVELOPMENT</span>
+          <span class="choice-art board-art"><i></i><i></i><i></i><i></i><b>♛</b></span>
+          <strong>Turf<br>Wars</strong><small>Property, tribute &amp; power · 2–6 players</small><em>See the first look →</em>
+        </button>
       </div>
-      <div class="guest-table" aria-label="Preview of the card table">
-        <div class="spotlight"></div>
-        <div class="preview-card back c1"><span>♛</span></div>
-        <div class="preview-card suit-blood c2"><b>7</b><span>◆</span><small>BLOOD</small></div>
-        <div class="preview-card suit-gold c3"><b>↻</b><span>DOUBLE<br>CROSS</span></div>
-        <div class="preview-card suit-ice c4"><b>+2</b><span>SHAKE<br>DOWN</span></div>
-        <div class="table-seal"><span>THE</span><b>FAMILY</b><small>NEVER FORGETS</small></div>
-      </div>
+      <div class="download-strip"><div><span>▣</span><p><b>Play on Windows</b><small>Install the desktop app and use the same account.</small></p></div><a class="button gold" href="https://github.com/Rykeen-sargeras/underboss-table/releases/latest/download/Underboss-Table-Setup-1.0.0.exe">Download for Windows</a></div>
     </section>
 
     <section id="lobbyView" class="app-shell hidden">
@@ -102,6 +96,18 @@
         <div id="handArea" class="hand-area hidden"><div class="hand-label"><span>YOUR HAND</span><small id="handHint"></small></div><div id="hand" class="hand"></div></div>
       </div>
     </section>
+
+    <section id="turfView" class="turf-shell hidden">
+      <button class="text-button turf-back" id="leaveTurfButton">← Game menu</button>
+      <div class="turf-intro"><p class="eyebrow">First look · Game two</p><h1>Turf Wars</h1><p>Buy blocks, build rackets, collect tribute, and bankrupt rival families. This will be an original property-trading game built for the same accounts and crews.</p><div class="turf-meta"><span><b>2–6</b> families</span><span><b>45–90</b> minutes</span><span><b>1</b> city</span></div></div>
+      <div class="board-preview" aria-label="Turf Wars board concept">
+        <div class="board-ring">
+          <span class="property p1">THE DOCKS<small>$60</small></span><span class="property p2 orange-tile">LITTLE ITALY<small>$100</small></span><span class="property p3">CITY HALL<small>PAY $50</small></span><span class="property p4 red-tile">CASINO ROW<small>$220</small></span><span class="property p5">BACKROOM<small>DRAW A CARD</small></span><span class="property p6 gold-tile">UPTOWN<small>$320</small></span><span class="property p7">THE CAN<small>JUST VISITING</small></span><span class="property p8 blue-tile">WATERFRONT<small>$400</small></span>
+          <div class="board-center"><span>♛</span><b>TURF WARS</b><small>OWN THE CITY</small></div>
+        </div>
+      </div>
+      <div class="development-note"><b>Now being built</b><span>Next milestone: movement, property ownership, rent, and a complete first playable board.</span></div>
+    </section>
   </main>
 
   <dialog id="authDialog" class="modal">
@@ -114,6 +120,8 @@
       <p class="form-error" id="authError"></p>
       <button class="button gold full" type="submit">Enter the backroom</button>
     </form>
+    <div class="casual-divider"><span>or</span></div>
+    <button class="button ghost full" id="guestLoginButton">Play as Mobster Casual</button><small class="casual-note">No account. Your guest name and stats last for this session.</small>
   </dialog>
 
   <dialog id="profileDialog" class="modal">
@@ -121,6 +129,7 @@
     <p class="eyebrow">Your account</p><h2>Family profile</h2>
     <div class="profile-editor"><span class="avatar xlarge" id="profileAvatar"></span><div><strong id="profileName"></strong><small id="profileStats"></small></div></div>
     <form id="avatarForm"><label class="upload-label">Change profile picture<input type="file" id="avatarInput" accept="image/png,image/jpeg,image/webp,image/gif" /></label><small>JPG, PNG, GIF or WebP · 1 MB max</small><p class="form-error" id="avatarError"></p><button class="button gold full" type="submit">Save picture</button></form>
+    <p id="casualProfileNote" class="casual-profile hidden">Mobster Casual sessions are temporary. Create an account anytime to keep your wins and profile picture.</p>
     <button class="button ghost full" id="logoutButton">Sign out</button>
   </dialog>
 

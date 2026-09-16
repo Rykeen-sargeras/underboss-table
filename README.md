@@ -5,12 +5,14 @@ An original, mafia-themed real-time shedding card game for 2–6 players. It run
 ## What is included
 
 - Username/password accounts with secure password hashing
+- One-click Mobster Casual guest sessions with no account required
 - Uploadable profile pictures (JPG, PNG, GIF, or WebP up to 1 MB)
 - Live table lobby, create/join/leave flows, host controls, and reconnect-safe account sessions
 - Server-authoritative turns and card validation over Socket.IO
 - Five family colors and seven action cards, including the single Trade Hands and single Fuck You +10 cards
 - Persistent account stats in a compact server-side data store
 - Responsive browser UI and a Windows Electron installer target
+- A game-selection menu and an initial Turf Wars property-game concept
 - Railway configuration and health check
 
 ## Run locally
